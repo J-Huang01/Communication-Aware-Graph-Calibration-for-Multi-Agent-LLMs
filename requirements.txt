@@ -1,0 +1,38 @@
+# CAGE-Cal — Python dependencies (Python 3.12, CUDA 12.x).
+#
+# Install:
+#   conda create -n cagecal python=3.12 -y && conda activate cagecal
+#   pip install -r requirements.txt
+#
+# Notes:
+#   - torch is pinned to a +cu128 wheel. If your machine has a different
+#     CUDA version, install the matching torch / torch-geometric wheels
+#     from https://pytorch.org and https://pytorch-geometric.readthedocs.io.
+#   - vllm is only needed to serve the local open-weight backbones for the
+#     panel-generation stage. If you generate panels with hosted APIs
+#     instead, vllm can be omitted.
+#   - `calibration` is the `uncertainty-calibration` package (Kumar et al.,
+#     2019); it provides PlattBinnerCalibrator used by the post-hoc step.
+
+# Deep learning + graph
+torch==2.9.0
+torch-geometric==2.7.0
+
+# Sentence embeddings (answer node features + per-query retrieval)
+sentence-transformers==5.4.1
+
+# Numerical + classical ML
+numpy==2.2.6
+scikit-learn==1.8.0
+
+# Post-hoc calibration
+betacal>=1.2.0
+uncertainty-calibration>=0.1.4
+
+# Datasets (Hugging Face) + LLM client
+datasets==3.6.0
+openai==2.31.0
+tenacity==9.1.4
+
+# Panel generation server (optional; only for local backbones)
+vllm==0.11.2
