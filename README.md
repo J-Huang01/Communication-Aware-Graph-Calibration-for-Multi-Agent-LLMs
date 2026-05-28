@@ -21,7 +21,7 @@ topologies (iid, debate, chain, hub-spoke, tree). Panels are graded by an
 answer-equivalence judge to produce correctness labels.
 
 **Counterfactual Graph Calibration** — A shared two-tower relational
-encoder (GATv2 pairwise stream + hypergraph group stream) encodes the
+encoder encodes the
 observed graph and the matched iid counterfactual graph. The calibration
 head maps the panel embeddings and their difference to the probability that
 the plurality answer is correct, refined by a per-benchmark post-hoc step.
