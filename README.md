@@ -37,7 +37,7 @@ conda create -n cagecal python=3.12 -y && conda activate cagecal
 pip install -r requirements.txt
 ```
 
-Set environment variables for LLM access (no keys are stored in the code):
+Set environment variables for LLM access:
 
 ```bash
 # panel backbones served by local vLLM
