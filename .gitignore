@@ -5,3 +5,31 @@ results/
 cache/
 *.egg-info/
 .venv/
+
+# Local environment variables and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+.envrc
+.netrc
+.aws/
+.ssh/
+credentials*.json
+secrets*.json
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+
+# Local editor state and runtime logs may contain machine-specific paths
+.idea/
+.vscode/
+.ipynb_checkpoints/
+logs/
+*.log
