@@ -1,34 +1,52 @@
 # CAGE-Cal
-Counterfactual Graph for Multi-Agent LLM Calibration
+
+Communication-Aware Graph Calibration for Multi-Agent LLMs
 
 ## Overview
 
-CAGE-Cal is a calibration framework for multi-agent LLM systems. Existing
-methods treat agreement as evidence: when many agents in a panel give the
-same answer, that answer is assumed reliable. This breaks once agents
-communicate, because communication induces correlated failures and false
-consensus, so the same vote share can mean reliable agreement under one
-topology and over-confidence under another. CAGE-Cal goes beyond counting
-agreement: for each query it compares an observed post-communication agent
-graph with a matched counterfactual no-communication graph and calibrates
-confidence from the difference.
+**CAGE-Cal (Communication-Aware Agent-Graph Calibration)** estimates the
+probability that a heterogeneous multi-agent panel's plurality answer is
+correct across diverse communication topologies. Agreement alone can be a
+misleading confidence signal. The paper identifies two opposing calibration
+failures:
 
-The framework consists of three stages:
+- **Diversity-induced under-confidence (DUC):** incorrect agents spread
+  across different wrong answers, so vote share underestimates panel reliability.
+- **Communication-induced over-confidence (COC):** agents converge to a wrong
+  answer through influence, so vote share overestimates panel reliability.
 
-**Panel Generation** — A canonical population of 20 agents (4 backbone
-LLMs x 5 prompting roles) answers each query under five communication
-topologies (iid, debate, chain, hub-spoke, tree). Panels are graded by an
-answer-equivalence judge to produce correctness labels.
+For each query, CAGE-Cal compares an observed post-communication agent graph
+with a matched IID graph in which the same agents answer without
+communication. Here, the counterfactual is a matched no-communication
+reference execution. Pairwise and group-level dependencies help the
+calibrator distinguish benign disagreement from false consensus.
 
-**Counterfactual Graph Calibration** — A shared two-tower relational
-encoder encodes the
-observed graph and the matched iid counterfactual graph. The calibration
-head maps the panel embeddings and their difference to the probability that
-the plurality answer is correct, refined by a per-benchmark post-hoc step.
+The method has three components:
 
-**Confidence-Routed Selection** — CAGE-Select runs each query under
-multiple topologies and returns the answer with the highest CAGE-Cal
-confidence, turning topology choice into a per-query decision.
+**Agent Dependency Graph Construction** — Build observed and IID reference
+graphs over matched agent identities for the same query and rollout.
+Pairwise edges capture communication adjacency and query-dependent
+correctness correlations estimated from nearby training queries. Hyperedges
+capture group-level dependencies through shared model families, prompting
+roles, answer clusters, and communication exposure.
+
+**Counterfactual Shift Calibration** — A shared calibration agent graph
+encoder combines pairwise message passing with hypergraph convolution.
+The calibration head uses the observed and reference graph embeddings,
+their difference, and benchmark identity to estimate plurality-answer
+correctness. Training combines smoothed binary cross-entropy with a Brier
+penalty, followed by per-benchmark post-hoc calibration.
+
+**Confidence-Guided Answer Selection (CAGE-Select)** — Generate candidate
+panels under all evaluated topologies and select the plurality answer with
+the highest CAGE-Cal confidence. Selection operates on completed panel
+outputs, and its inference cost includes generating all candidate panels.
+
+Experiments use five benchmarks (TriviaQA, TruthfulQA, MMLU-Pro, GSM8K, and
+BIG-Bench Hard) and five communication topologies (IID, debate, chain,
+hub-spoke, and tree). Panels are drawn from a canonical pool of 20 agents
+(4 backbone LLMs x 5 prompting roles) and graded by an answer-equivalence
+judge to produce correctness labels.
 
 ## Setup
 
@@ -69,7 +87,7 @@ python scripts/grade_main_rollout.py --root results/panels --workers 8
 python scripts/dedup_rollouts.py results/panels
 ```
 
-### Train CAGE-Cal (Stage 2)
+### Train CAGE-Cal
 
 ```bash
 python scripts/run_cage_cal.py \
@@ -83,7 +101,7 @@ python scripts/cage_cal_loto.py \
   --n_seeds 5 --epochs 15 --device cuda:0
 ```
 
-### CAGE-Select Inference (Stage 3)
+### Confidence-Guided Answer Selection with CAGE-Select
 
 ```bash
 python scripts/cage_select.py \
@@ -96,7 +114,7 @@ and sentence embeddings are cached under `cache/` and reused across runs.
 ## Project Structure
 
 ```
-cage-cal/
+Counterfactual-Graph-Calibration-for-Multi-Agent-LLMs/
 ├── cage_cal/                     # Core library
 │   ├── agent_population.py       # Canonical agents (4 backbones x 5 roles)
 │   ├── topology.py               # iid / debate / chain / hub-spoke / tree
@@ -111,9 +129,9 @@ cage-cal/
     ├── run_main_rollout.py       # Panel generation
     ├── grade_main_rollout.py     # Grading
     ├── dedup_rollouts.py         # Deduplication
-    ├── cage_gnn_hypergraph.py    # CAGE-Cal model + graph construction
-    ├── cage_gnn_hyper_selfcal.py # Calibration-aware training loop
-    ├── run_cage_cal.py           # Stage 2: CAGE-Cal training
+    ├── cage_gnn_hypergraph.py     # Agent dependency graphs + shared encoder
+    ├── cage_gnn_hyper_selfcal.py  # Counterfactual shift calibration learning
+    ├── run_cage_cal.py           # CAGE-Cal training + post-hoc calibration
     ├── cage_cal_loto.py          # Leave-one-topology-out evaluation
-    └── cage_select.py            # Stage 3: confidence-routed selection
+    └── cage_select.py            # Confidence-guided answer selection
 ```
