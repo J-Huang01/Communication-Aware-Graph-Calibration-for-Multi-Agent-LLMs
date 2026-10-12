@@ -114,7 +114,7 @@ and sentence embeddings are cached under `cache/` and reused across runs.
 ## Project Structure
 
 ```
-Counterfactual-Graph-Calibration-for-Multi-Agent-LLMs/
+Communication-Aware-Graph-Calibration-for-Multi-Agent-LLMs/
 ├── cage_cal/                     # Core library
 │   ├── agent_population.py       # Canonical agents (4 backbones x 5 roles)
 │   ├── topology.py               # iid / debate / chain / hub-spoke / tree
